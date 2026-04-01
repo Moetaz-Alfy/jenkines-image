@@ -1,0 +1,57 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(
+            name: 'ENVIRONMENT',
+            choices: ['dev', 'staging', 'production'],
+            description: 'Select deployment environment'
+        )
+    }
+
+    stages {
+
+        stage('Build Docker Image') {
+            steps {
+                echo 'Building Docker image...'
+                sh 'docker build -t flask-app .'
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                echo 'Running container...'
+                sh 'docker stop flask-app || true'
+                sh 'docker rm flask-app || true'
+                sh 'docker run -d -p 5000:5000 --name flask-app flask-app'
+            }
+        }
+
+        stage('Deploy to Dev') {
+            when {
+                expression { params.ENVIRONMENT == 'dev' }
+            }
+            steps {
+                echo 'Deploying to DEV'
+            }
+        }
+
+        stage('Deploy to Staging') {
+            when {
+                expression { params.ENVIRONMENT == 'staging' }
+            }
+            steps {
+                echo 'Deploying to STAGING'
+            }
+        }
+
+        stage('Deploy to Production') {
+            when {
+                expression { params.ENVIRONMENT == 'production' }
+            }
+            steps {
+                echo 'Deploying to PRODUCTION'
+            }
+        }
+    }
+}
